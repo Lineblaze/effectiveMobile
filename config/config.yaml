@@ -1,0 +1,14 @@
+ServiceName: "Music Collection"
+
+Server:
+  host: "localhost"
+  port: "8080"
+
+Postgres:
+  host: "localhost"
+  port: "5432"
+  user: "postgres"
+  password: "963852741"
+  DBName: "music_collection"
+  sslMode: "disable"
+  pgDriver: "pgx"

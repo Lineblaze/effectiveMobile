@@ -1,0 +1,221 @@
+openapi: 3.0.3
+info:
+  title: Music Collection
+  version: 0.0.1
+paths:
+  /info:
+    get:
+      parameters:
+        - name: group
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: song
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SongDetail'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /songs:
+    get:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetSongsBody'
+      responses:
+        '200':
+          description: List of songs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+        '500':
+          description: Internal server error
+
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSongBody'
+      responses:
+        '201':
+          description: Song created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /songs/{songId}:
+    patch:
+      parameters:
+        - name: songId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSongBody'
+      responses:
+        '200':
+          description: Song updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+        '404':
+          description: Song not found
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+    delete:
+      parameters:
+        - name: songId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Song deleted
+        '404':
+          description: Song not found
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    SongDetail:
+      required:
+        - releaseDate
+        - text
+        - link
+      type: object
+      properties:
+        releaseDate:
+          type: string
+          example: 16.07.2006
+        text:
+          type: string
+          example: Ooh baby, don't you know I suffer?
+        link:
+          type: string
+          example: https://www.youtube.com/watch?v=Xsp3_a-PMTw
+
+    Song:
+      required:
+        - id
+        - group
+        - song
+        - releaseDate
+        - text
+        - link
+      type: object
+      properties:
+        id:
+          type: string
+          example: 874fdc00-8bb4-4423-894e-01a6a3937883
+        group:
+          type: string
+          example: Muse
+        song:
+          type: string
+          example: Supermassive Black Hole
+        releaseDate:
+          type: string
+          example: 16.07.2006
+        text:
+          type: string
+          example: Ooh baby, don't you know I suffer?
+        link:
+          type: string
+          example: https://www.youtube.com/watch?v=Xsp3_a-PMTw
+
+    GetSongsBody:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 874fdc00-8bb4-4423-894e-01a6a3937883
+        group:
+          type: string
+          example: Muse
+        song:
+          type: string
+          example: Supermassive Black Hole
+        releaseDate:
+          type: string
+          example: 16.07.2006
+        text:
+          type: string
+          example: Ooh baby, don't you know I suffer?
+        link:
+          type: string
+          example: https://www.youtube.com/watch?v=Xsp3_a-PMTw
+        limit:
+          type: integer
+          description: Limit the number of songs returned
+          default: 10
+        offset:
+          type: integer
+          description: Offset for pagination
+          default: 0
+
+    CreateSongBody:
+      required:
+        - group
+        - song
+      type: object
+      properties:
+        group:
+          type: string
+          example: Muse
+        song:
+          type: string
+          example: Supermassive Black Hole
+
+    UpdateSongBody:
+      type: object
+      properties:
+        group:
+          type: string
+          example: Muse
+        song:
+          type: string
+          example: Supermassive Black Hole
+        releaseDate:
+          type: string
+          example: 16.07.2006
+        text:
+          type: string
+          example: Ooh baby, don't you know I suffer?
+        link:
+          type: string
+          example: https://www.youtube.com/watch?v=Xsp3_a-PMTw
