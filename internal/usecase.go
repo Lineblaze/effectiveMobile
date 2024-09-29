@@ -3,13 +3,15 @@
 package internal
 
 import (
-	openapi "github.com/Lineblaze/effective_gen"
+	openapi "github.com/Lineblaze/effective_mobile_gen"
 )
 
 // Controller describes methods, implemented by the usecase package.
 type UseCase interface {
 	FetchSongDetail(group, song string) (*openapi.SongDetail, error)
 	GetSongDetail(group, song string) (*openapi.SongDetail, error)
+	GetSongs(body *openapi.GetSongsBody) ([]*openapi.Song, error)
+	GetSongText(body *openapi.GetSongTextBody) ([][]string, error)
 	CreateSong(req openapi.CreateSongBody, detail *openapi.SongDetail) (*openapi.Song, error)
 	UpdateSong(songID string, body *openapi.UpdateSongBody) (*openapi.Song, error)
 	DeleteSong(songID string) error

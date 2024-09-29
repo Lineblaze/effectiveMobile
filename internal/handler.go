@@ -9,6 +9,8 @@ import (
 // Controller describes methods, implemented by the http package.
 type Handler interface {
 	GetSongDetail() fiber.Handler
+	GetSongs() fiber.Handler
+	GetSongText() fiber.Handler
 	CreateSong() fiber.Handler
 	UpdateSong() fiber.Handler
 	DeleteSong() fiber.Handler

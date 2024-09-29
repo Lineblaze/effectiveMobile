@@ -3,7 +3,7 @@ package http
 import (
 	useCase "effectiveMobile/internal"
 	"effectiveMobile/pkg/logger"
-	openapi "github.com/Lineblaze/effective_gen"
+	openapi "github.com/Lineblaze/effective_mobile_gen"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -37,20 +37,41 @@ func (h *Handler) GetSongDetail() fiber.Handler {
 	}
 }
 
-//func (h Handler) GetSongs() fiber.Handler {
-//	return func(ctx fiber.Ctx) error {
-//		var body openapi.GetSongsBody
-//		if err := ctx.Bind().Body(&body); err != nil {
-//			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
-//		}
-//		songs, err := h.useCase.GetSongs(&body)
-//		if err != nil {
-//			h.logger.Errorf("Failed to get songs %v", err)
-//			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "InternalServerError"})
-//		}
-//		return ctx.Status(fiber.StatusOK).JSON(songs)
-//	}
-//}
+func (h Handler) GetSongs() fiber.Handler {
+	return func(ctx fiber.Ctx) error {
+		var body openapi.GetSongsBody
+		if err := ctx.Bind().Body(&body); err != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+		}
+		songs, err := h.useCase.GetSongs(&body)
+		if err != nil {
+			h.logger.Errorf("Failed to get songs %v", err)
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "InternalServerError"})
+		}
+		return ctx.Status(fiber.StatusOK).JSON(songs)
+	}
+}
+
+func (h *Handler) GetSongText() fiber.Handler {
+	return func(ctx fiber.Ctx) error {
+		var body openapi.GetSongTextBody
+		if err := ctx.Bind().Body(&body); err != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+		}
+
+		if body.Group == "" || body.Song == "" {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "group and song are required"})
+		}
+
+		verses, err := h.useCase.GetSongText(&body)
+		if err != nil {
+			h.logger.Errorf("Failed to get song verses: %v", err)
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
+		}
+
+		return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"verses": verses})
+	}
+}
 
 func (h Handler) CreateSong() fiber.Handler {
 	return func(ctx fiber.Ctx) error {

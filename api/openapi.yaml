@@ -109,7 +109,33 @@ paths:
           description: Song not found
         '500':
           description: Internal server error
+  /songs/text:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetSongTextBody'
+      responses:
+        '200':
+          description: Paginated song text
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text:
+                    type: array
+                    items:
+                      type: string
+                    example: [
 
+                    ]
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
 components:
   schemas:
     SongDetail:
@@ -219,3 +245,23 @@ components:
         link:
           type: string
           example: https://www.youtube.com/watch?v=Xsp3_a-PMTw
+    GetSongTextBody:
+      type: object
+      required:
+        - group
+        - song
+      properties:
+        group:
+          type: string
+          example: Muse
+        song:
+          type: string
+          example: Supermassive Black Hole
+        limit:
+          type: integer
+          description: Limit the number of verses returned
+          default: 5
+        offset:
+          type: integer
+          description: Offset for pagination
+          default: 0

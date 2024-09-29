@@ -1,6 +1,7 @@
 package main
 
 import (
+	"effectiveMobile/cmd/migrator"
 	"effectiveMobile/config"
 	"effectiveMobile/internal/httpServer"
 	"effectiveMobile/pkg/logger"
@@ -12,6 +13,8 @@ func main() {
 
 	cfg := config.LoadConfig()
 	log.Println("Config loaded")
+
+	migrator.Migrate()
 
 	appLogger := logger.NewApiLogger(cfg)
 	err := appLogger.InitLogger()
