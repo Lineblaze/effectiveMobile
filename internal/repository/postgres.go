@@ -1,6 +1,7 @@
 package postgresql
 
 import (
+	"effectiveMobile/pkg/logger"
 	"effectiveMobile/pkg/storage/postgres"
 	"fmt"
 	openapi "github.com/Lineblaze/effective_mobile_gen"
@@ -9,14 +10,16 @@ import (
 
 //go:generate ifacemaker -f postgres.go -o ../repository.go -i Repository -s PostgresRepository -p internal -y "Controller describes methods, implemented by the repository package."
 type PostgresRepository struct {
-	db postgres.Postgres
+	db     postgres.Postgres
+	logger *logger.ApiLogger
 }
 
-func NewPostgresRepository(db postgres.Postgres) *PostgresRepository {
-	return &PostgresRepository{db: db}
+func NewPostgresRepository(db postgres.Postgres, logger *logger.ApiLogger) *PostgresRepository {
+	return &PostgresRepository{db: db, logger: logger}
 }
 
 func (p *PostgresRepository) GetSongDetail(group, song string) (*openapi.SongDetail, error) {
+	p.logger.Debugf("Fetching song detail for group: %s, song: %s", group, song)
 	var songDetail openapi.SongDetail
 	err := p.db.QueryRow(
 		`SELECT release_date, text, link FROM songs_detail WHERE "group" = $1 AND song = $2`,
@@ -24,13 +27,17 @@ func (p *PostgresRepository) GetSongDetail(group, song string) (*openapi.SongDet
 	).Scan(&songDetail.ReleaseDate, &songDetail.Text, &songDetail.Link)
 
 	if err != nil {
+		p.logger.Errorf("failed to fetch song detail: %v", err)
 		return nil, fmt.Errorf("failed to fetch song detail: %v", err)
 	}
 
+	p.logger.Infof("Successfully fetched song detail for group: %s, song: %s", group, song)
 	return &songDetail, nil
 }
 
 func (p *PostgresRepository) GetSongs(body *openapi.GetSongsBody) ([]*openapi.Song, error) {
+	p.logger.Debug("Getting songs with filter parameters")
+
 	query := `SELECT id, "group", song, release_date, "text", link FROM songs WHERE 1=1`
 	var params []interface{}
 	paramIdx := 1
@@ -74,6 +81,7 @@ func (p *PostgresRepository) GetSongs(body *openapi.GetSongsBody) ([]*openapi.So
 
 	rows, err := p.db.Query(query, params...)
 	if err != nil {
+		p.logger.Errorf("failed to get songs: %v", err)
 		return nil, fmt.Errorf("failed to execute query: %v", err)
 	}
 	defer rows.Close()
@@ -82,29 +90,38 @@ func (p *PostgresRepository) GetSongs(body *openapi.GetSongsBody) ([]*openapi.So
 	for rows.Next() {
 		var song openapi.Song
 		if err = rows.Scan(&song.Id, &song.Group, &song.Song, &song.ReleaseDate, &song.Text, &song.Link); err != nil {
+			p.logger.Errorf("failed to scan song: %v", err)
 			return nil, fmt.Errorf("failed to scan row: %v", err)
 		}
 		songs = append(songs, &song)
 	}
 
 	if err = rows.Err(); err != nil {
+		p.logger.Errorf("error reading rows: %v", err)
 		return nil, fmt.Errorf("row iteration error: %v", err)
 	}
 
+	p.logger.Infof("Successfully retrieved %d songs", len(songs))
 	return songs, nil
 }
 
 func (p *PostgresRepository) GetSongText(group, song string) (string, error) {
+	p.logger.Debugf("Fetching song text for group: %s, song: %s", group, song)
 	var songText string
 	query := `SELECT "text" FROM songs WHERE "group" = $1 AND song = $2`
 	err := p.db.QueryRow(query, group, song).Scan(&songText)
 	if err != nil {
+		p.logger.Errorf("failed to fetch song text: %v", err)
 		return "", fmt.Errorf("failed to get song text: %v", err)
 	}
+
+	p.logger.Infof("Successfully fetched song text for group: %s, song: %s", group, song)
 	return songText, nil
 }
 
 func (p *PostgresRepository) CreateSong(song *openapi.Song) (*openapi.Song, error) {
+	p.logger.Debugf("Creating song for group: %s, song: %s", song.Group, song.Song)
+
 	query := `
 		INSERT INTO songs ("group", song, release_date, text, link)
 		VALUES ($1, $2, $3, $4, $5)
@@ -121,13 +138,16 @@ func (p *PostgresRepository) CreateSong(song *openapi.Song) (*openapi.Song, erro
 	)
 
 	if err != nil {
+		p.logger.Errorf("failed to create song: %v", err)
 		return nil, fmt.Errorf("inserting song: %v", err)
 	}
 
+	p.logger.Infof("Successfully created song for group: %s, song: %s", song.Group, song.Song)
 	return song, nil
 }
 
 func (p *PostgresRepository) UpdateSong(songID string, req *openapi.UpdateSongBody) (*openapi.Song, error) {
+	p.logger.Debugf("Updating song with ID: %s", songID)
 	var args []any
 	var fields []string
 	argID := 1
@@ -182,16 +202,22 @@ func (p *PostgresRepository) UpdateSong(songID string, req *openapi.UpdateSongBo
 	)
 
 	if err != nil {
+		p.logger.Errorf("failed to update song: %v", err)
 		return nil, fmt.Errorf("updating song: %v", err)
 	}
 
+	p.logger.Infof("Successfully updated song with ID: %s", songID)
 	return &updatedSong, nil
 }
 
 func (p *PostgresRepository) DeleteSong(songID string) error {
+	p.logger.Debugf("Deleting song with ID: %s", songID)
 	_, err := p.db.Exec("DELETE FROM songs WHERE id = $1", songID)
 	if err != nil {
+		p.logger.Errorf("failed to delete song: %v", err)
 		return fmt.Errorf("deleting song: %v", err)
 	}
+
+	p.logger.Infof("Successfully deleted song with ID: %s", songID)
 	return nil
 }

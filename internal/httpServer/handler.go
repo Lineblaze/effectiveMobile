@@ -17,8 +17,8 @@ func (s *Server) MapHandlers(app *fiber.App, logger *logger.ApiLogger) error {
 		return err
 	}
 
-	repo := repository.NewPostgresRepository(db)
-	useCase := useCase.NewUseCase(repo)
+	repo := repository.NewPostgresRepository(db, logger)
+	useCase := useCase.NewUseCase(repo, logger)
 	handler := http.NewHandler(useCase, logger)
 
 	app.Use(serverLogger.New())
